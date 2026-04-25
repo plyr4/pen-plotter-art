@@ -2,7 +2,7 @@ import argparse
 import importlib
 import os
 
-from art_conversion.vpype import draw_svg, plot_hpgl, prepare_vpype_document
+from art_conversion.vpype import draw_svg, get_plottable_size, plot_hpgl, prepare_vpype_document
 from hpgl_preview.timeline import show_timeline
 
 # page size in mm (A4 portrait)
@@ -36,8 +36,14 @@ if __name__ == "__main__":
         print(f"Error: art '{args.art}' not found. Available: {', '.join(sorted(available))}")
         raise SystemExit(1)
 
+    # compute the actual plottable area for the configured device/paper/orientation
+    # (smaller than the raw paper size; points outside this get clipped by vpype)
+    plottable_width, plottable_height = get_plottable_size(
+        HPGL_DEVICE, HPGL_PAGE_SIZE, HPGL_LANDSCAPE
+    )
+
     # draw the art as "polylines", a list of (x, y) pairs
-    polylines = art_module.generate_polylines(WIDTH, HEIGHT)
+    polylines = art_module.generate_polylines(plottable_width, plottable_height)
 
     # convert polylines to a vpype document (handles unit conversion and page size)
     vpype_doc = prepare_vpype_document(WIDTH, HEIGHT, polylines)

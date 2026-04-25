@@ -5,13 +5,13 @@
       <cc:Work>
         <dc:format>image/svg+xml</dc:format>
         <dc:source/>
-        <dc:date>2026-04-25T12:31:04.141742</dc:date>
+        <dc:date>2026-04-25T14:25:33.959342</dc:date>
       </cc:Work>
     </rdf:RDF>
   </metadata>
   <defs/>
   <g fill="none" id="layer1" inkscape:groupmode="layer" inkscape:label="1" stroke="#0000ff" style="display:inline">
-    <line x1="0.0" x2="793.7008" y1="0.0" y2="1122.5197"/>
-    <line x1="793.7008" x2="793.7008" y1="0.0" y2="1122.5197"/>
+    <line x1="-122.2209" x2="915.9216" y1="198.2391" y2="924.2806"/>
+    <line x1="915.9216" x2="915.9216" y1="198.2391" y2="924.2806"/>
   </g>
 </svg>
