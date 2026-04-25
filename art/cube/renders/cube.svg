@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:xlink="http://www.w3.org/1999/xlink" baseProfile="tiny" height="29.7cm" version="1.2" viewBox="0 0 793.7007874015749 1122.5196850393702" width="21.0cm">
+  <metadata>
+    <rdf:RDF>
+      <cc:Work>
+        <dc:format>image/svg+xml</dc:format>
+        <dc:source/>
+        <dc:date>2026-04-25T10:39:56.988862</dc:date>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs/>
+  <g fill="none" id="layer1" inkscape:groupmode="layer" inkscape:label="1" stroke="#0000ff" style="display:inline">
+    <polygon points="396.8504,332.1382 595.2756,446.699 595.2756,675.8207 396.8504,790.3815 198.4252,675.8207 198.4252,446.699"/>
+    <line x1="595.2756" x2="198.4252" y1="675.8207" y2="446.699"/>
+    <line x1="396.8504" x2="396.8504" y1="332.1382" y2="790.3815"/>
+    <line x1="198.4252" x2="595.2756" y1="675.8207" y2="446.699"/>
+  </g>
+</svg>
