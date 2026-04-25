@@ -2,10 +2,10 @@ import math
 import bisect
 import matplotlib.pyplot as plt
 import matplotlib.widgets as widgets
-from hpgl.parse import parse_hpgl
+from hpgl_preview.hpgl_parser.parse import parse_hpgl
 
 
-def preview_timeline(draw_speed, travel_speed, art,
+def show_timeline(draw_speed, travel_speed, art,
                      plotter_unit_mm=0.02488, playback_speed=60):
     hpgl_lines, max_x, max_y = parse_hpgl(f"art/{art}/renders/{art}.hpgl")
 
@@ -81,7 +81,7 @@ def preview_timeline(draw_speed, travel_speed, art,
                     seg_xs, seg_ys = [], []
                     in_draw = False
 
-        # Interpolate partial progress toward the next move so the pen
+        # interpolate partial progress toward the next move so the pen
         # appears to physically drag along each segment rather than
         # snapping it into existence.
         next_frame = frame + 1

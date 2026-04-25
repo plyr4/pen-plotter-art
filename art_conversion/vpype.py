@@ -6,17 +6,13 @@ import vpype
 MM_TO_PX = 96.0 / 25.4  # vpype uses CSS pixels (1 px = 1/96 inch)
 
 
-def prepare_vpype_document(
-    width_mm,
-    height_mm,
-    paths,
-):
+def prepare_vpype_document(width_mm, height_mm, polylines):
     lc = vpype.LineCollection()
-    for path in paths:
-        if len(path) < 2:
+    for polyline in polylines:
+        if len(polyline) < 2:
             continue
         arr = np.array(
-            [x * MM_TO_PX + 1j * y * MM_TO_PX for x, y in path],
+            [x * MM_TO_PX + 1j * y * MM_TO_PX for x, y in polyline],
             dtype=complex,
         )
         lc.append(arr)
@@ -35,7 +31,7 @@ def draw_svg(doc, art):
         vpype.write_svg(f, doc, center=True)
 
 
-def plot_hpgl(doc, art, page_size="a4", landscape=False, center=True, device="hp7475a", velocity=None):
+def plot_hpgl(doc, art, page_size, landscape, center, device, velocity):
     output_folder = f"art/{art}/renders"
     os.makedirs(output_folder, exist_ok=True)
 
@@ -44,10 +40,10 @@ def plot_hpgl(doc, art, page_size="a4", landscape=False, center=True, device="hp
         vpype.write_hpgl(
             f,
             doc,
-            page_size=page_size,
-            landscape=landscape,
-            center=center,
-            device=device,
-            velocity=velocity,
+            page_size,
+            landscape,
+            center,
+            device,
+            velocity,
             absolute=True,
         )

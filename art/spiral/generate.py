@@ -1,7 +1,7 @@
 import math
 
 
-def generate_lines(width, height):
+def generate_polylines(width, height):
     a = 0
     b = 1.3
     freq = 8.0

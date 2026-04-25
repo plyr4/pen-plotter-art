@@ -1,42 +1,65 @@
 import math
 
 
-def project_points_isometric(points_3d, width, height):
+def rotate_points(points_3d, rot_x=0.0, rot_y=0.0):
     """
-    Isometric projection of (x, y, z) coordinates to 2D screen coordinates.
+    Rotate a list of (x, y, z) points around the X axis then the Y axis.
+    rot_x, rot_y are in radians.
     """
-    cx, cy = width / 2, height / 2
-    size = min(width / (2 * math.sqrt(3)), height / 4) * 0.5
-    a = math.pi / 6  # 30° isometric angle
+    cx, sx = math.cos(rot_x), math.sin(rot_x)
+    cy, sy = math.cos(rot_y), math.sin(rot_y)
     result = []
     for x, y, z in points_3d:
-        xi = (x - z) * math.cos(a)
-        yi = (x + z) * math.sin(a) - y
-        result.append((cx + xi * size, cy + yi * size))
+        # Rotate around X axis
+        y1 = cx * y - sx * z
+        z1 = sx * y + cx * z
+        # Rotate around Y axis
+        x2 = cy * x + sy * z1
+        z2 = -sy * x + cy * z1
+        result.append((x2, y1, z2))
     return result
 
 
-def cube_isometric_lines(width, height):
+def project_points_orthographic(points_3d, width, height):
     """
-    Returns the 4 polylines that form an isometric cube view:
-    one closed hexagon (outer silhouette) and three interior diagonals.
+    Orthographic projection of (x, y, z) coordinates to 2D screen coordinates.
+    """
+    cx, cy = width / 2, height / 2
+    size = min(width, height) * 0.28
+    result = []
+    for x, y, z in points_3d:
+        result.append((cx + x * size, cy + y * size))
+    return result
+
+
+def cube(width, height, rot_x=math.radians(30), rot_y=math.radians(45)):
+    """
+    Returns polylines for a cube at the given viewing angles.
+    Uses face loops to minimise pen lifts: 2 face loops + 4 connecting edges = 6 strokes.
     """
     vertices_3d = [
-        ( 1, -1, -1),  # v0 - right
-        ( 1,  1, -1),  # v1 - lower-right
-        (-1,  1, -1),  # v2 - bottom
-        (-1, -1,  1),  # v3 - left
-        ( 1, -1,  1),  # v4 - upper
-        (-1,  1,  1),  # v5 - upper-left
+        (-1, -1, -1),  # v0
+        ( 1, -1, -1),  # v1
+        ( 1,  1, -1),  # v2
+        (-1,  1, -1),  # v3
+        (-1, -1,  1),  # v4
+        ( 1, -1,  1),  # v5
+        ( 1,  1,  1),  # v6
+        (-1,  1,  1),  # v7
     ]
-    v = project_points_isometric(vertices_3d, width, height)
+
+    rotated = rotate_points(vertices_3d, rot_x=rot_x, rot_y=rot_y)
+    v = project_points_orthographic(rotated, width, height)
+
     return [
-        # outer hexagon (closed loop)
-        [v[2], v[1], v[0], v[4], v[3], v[5], v[2]],
-        # inner diagonals
-        [v[0], v[5]],
-        [v[2], v[4]],
-        [v[3], v[1]],
+        # face loops (closed — pen never lifts mid-face)
+        [v[0], v[1], v[2], v[3], v[0]],  # back face
+        [v[4], v[5], v[6], v[7], v[4]],  # front face
+        # connecting edges (genuinely separate strokes)
+        [v[0], v[4]],
+        [v[1], v[5]],
+        [v[2], v[6]],
+        [v[3], v[7]],
     ]
 
 

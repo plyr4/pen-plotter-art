@@ -1,5 +1,5 @@
-from art.cube_shared import cube_isometric_lines
+from art.cube_shared import cube
 
 
-def generate_lines(width, height):
-    return cube_isometric_lines(width, height)
+def generate_polylines(width, height):
+    return cube(width, height)
