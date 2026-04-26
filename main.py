@@ -1,13 +1,12 @@
 import argparse
 import importlib
+import inspect
 import os
 
-from art_conversion.vpype import draw_svg, get_plottable_size, plot_hpgl, prepare_vpype_document
-from hpgl_preview.timeline import show_timeline
+import vsketch
 
-# page size in mm (A4 portrait)
-WIDTH = 210
-HEIGHT = 297
+from art_conversion.vpype import draw_svg, plot_hpgl
+from hpgl_preview.timeline import show_timeline
 
 # vpype device name used when writing HPGL (sets correct plotter units / paper limits)
 # hp7475a, designmate, hp7440a, artisan, dmp_161, hp7550, dxy, sketchmate
@@ -24,11 +23,11 @@ TRAVEL_SPEED = 200.0  # mm/s, pen up
 
 # python main.py --art spiral
 if __name__ == "__main__":
-    # load the given art
     parser = argparse.ArgumentParser()
     parser.add_argument("--art", default="spiral",
                         help="Name of the art piece to generate (folder name inside art/)")
     args = parser.parse_args()
+
     try:
         art_module = importlib.import_module(f"art.{args.art}.generate")
     except ModuleNotFoundError:
@@ -36,25 +35,26 @@ if __name__ == "__main__":
         print(f"Error: art '{args.art}' not found. Available: {', '.join(sorted(available))}")
         raise SystemExit(1)
 
-    # compute the actual plottable area for the configured device/paper/orientation
-    # (smaller than the raw paper size; points outside this get clipped by vpype)
-    plottable_width, plottable_height = get_plottable_size(
-        HPGL_DEVICE, HPGL_PAGE_SIZE, HPGL_LANDSCAPE
-    )
+    # find the SketchClass subclass defined in this module
+    sketch_cls = None
+    for _name, obj in inspect.getmembers(art_module, inspect.isclass):
+        if (issubclass(obj, vsketch.SketchClass)
+                and obj is not vsketch.SketchClass
+                and obj.__module__ == art_module.__name__):
+            sketch_cls = obj
+            break
 
-    # draw the art as "polylines", a list of (x, y) pairs
-    polylines = art_module.generate_polylines(plottable_width, plottable_height)
+    if sketch_cls is None:
+        print(f"Error: no vsketch.SketchClass subclass found in art/{args.art}/generate.py")
+        raise SystemExit(1)
 
-    # convert polylines to a vpype document (handles unit conversion and page size)
-    vpype_doc = prepare_vpype_document(WIDTH, HEIGHT, polylines)
+    # execute the sketch (draw + finalize) to get the vpype document
+    sketch = sketch_cls.execute(finalize=True)
+    vpype_doc = sketch.vsk.document
 
-    # draw the svg using the document
     draw_svg(vpype_doc, args.art)
-
-    # draw the hpgl using the document
     plot_hpgl(vpype_doc, args.art,
               HPGL_PAGE_SIZE, HPGL_LANDSCAPE,
               HPGL_CENTER, HPGL_DEVICE, HPGL_VELOCITY)
 
-    # show an animation of what the pen plotter will do with the hpgl file
     show_timeline(DRAW_SPEED, TRAVEL_SPEED, args.art)

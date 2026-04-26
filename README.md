@@ -1,6 +1,6 @@
 # pen-plotter-art
 
-A Python framework for generating pen plotter art. Write a generative art piece as a list of polylines, and the framework converts it to SVG and HPGL output, then opens an interactive animation showing how the plotter will draw it.
+A Python framework for generating pen plotter art. Write a generative art piece using the [vsketch](https://vsketch.readthedocs.io/en/latest/) API, and the framework converts it to SVG and HPGL output, then opens an interactive animation showing how the plotter will draw it.
 
 ## Setup
 
@@ -10,7 +10,7 @@ A Python framework for generating pen plotter art. Write a generative art piece 
 ```sh
 python3 -m venv venv
 source venv/bin/activate
-pip install matplotlib vpype
+pip3 install matplotlib vpype vsketch
 ```
 
 > You should only need to do "Setup" once.
@@ -26,9 +26,9 @@ python main.py --art spiral
 The `--art` flag gives the program the name of a folder inside `art/`
 > each folder inside `art/` is an "art piece"
 
-Each "art piece" uses `art/<name>/generate.py` to make "[polylines](https://esri.github.io/geometry-api-java/doc/Polyline.html)"
+Each "art piece" uses `art/<name>/generate.py` to draw using the [vsketch](https://vsketch.readthedocs.io/en/latest/overview.html) API.
 
-The program gives the [polylines](https://esri.github.io/geometry-api-java/doc/Polyline.html) to [vpype](https://vpype.readthedocs.io/en/latest/) to draw an SVG and plot the HPGL, creating (or overwriting) two files:
+The framework passes the drawing to [vpype](https://vpype.readthedocs.io/en/latest/) to produce SVG and HPGL files, creating (or overwriting) two files:
 - `art/<name>/renders/<name>.svg` 
 - `art/<name>/renders/<name>.hpgl`
 
@@ -39,23 +39,24 @@ The program then _reads_ that HPGL file and "previews" what the pen plotter will
 Create a new folder under `art/` and add a `generate.py` file that exports a single function:
 
 ```python
-def generate_polylines(width, height):
+def generate(vsk, width, height):
     """
-    width, height: page dimensions in mm (default A4: 210 x 297)
-    Returns a list of polylines, where each polyline is a list of (x, y) tuples in mm.
+    vsk:    a vsketch.Vsketch instance — draw into it using the vsketch API.
+            Coordinates are in mm (scale("1mm") is pre-applied by the framework).
+    width, height: plottable area in mm (slightly smaller than the raw paper size).
     """
-    return [[(0,0), (width/2,height/4), (width,height)]]
+    vsk.line(0, 0, width, height)
 ```
+
+The full [vsketch API](https://vsketch.readthedocs.io/en/latest/overview.html) is available: `vsk.line()`, `vsk.rect()`, `vsk.circle()`, `vsk.polygon()`, `vsk.geometry()` (Shapely objects), transforms (`vsk.translate()`, `vsk.rotate()`, `vsk.pushMatrix()`), randomness (`vsk.random()`, `vsk.randomGaussian()`, `vsk.noise()`), and more.
 
 **Example** — a diagonal line across the page:
 
 Create `art/my_piece` and `art/my_piece/generate.py`
 
-Insert code:
-
 ```python
-def generate_polylines(width, height):
-    return [[(0, 0), (width, height)]]
+def generate(vsk, width, height):
+    vsk.line(0, 0, width, height)
 ```
 
 Then run the program:
@@ -82,6 +83,7 @@ Supported `HPGL_DEVICE` values include: `hp7475a`, `hp7550`, `hp7440a`, `designm
 
 ## Resources
 
+- https://vsketch.readthedocs.io/en/latest/overview.html
 - https://paulbourke.net/dataformats/hpgl/
 - https://vpype.readthedocs.io/en/latest/
 - https://matplotlib.org/
@@ -91,16 +93,17 @@ Supported `HPGL_DEVICE` values include: `hp7475a`, `hp7550`, `hp7440a`, `designm
 
 ### Continuous Strokes
 
-Each polyline is a continuous pen-down stroke. The plotter lifts the pen between polylines.
+Each stroke is a continuous pen-down move. The plotter lifts the pen between separate shapes.
 
-**Keep connected points in a single polyline.** A wiggly line made of thousands of points should be one polyline — not thousands of 2-point polylines. If you split it into segments, the plotter lifts and drops the pen at every join, which is slow and produces visible marks at each touch-down point.
+**Keep connected points in a single stroke.** A wiggly line made of thousands of points should be one continuous path — not thousands of tiny segments. If you split it up, the plotter lifts and drops the pen at every join, which is slow and produces visible marks at each touch-down point.
+
+Use `vsk.polygon(xs, ys)` or `vsk.geometry(LineString(points))` to draw long connected paths efficiently:
 
 ```python
-# Good — one stroke, pen never lifts
-return [[(x1,y1), (x2,y2), (x3,y3), (x4,y4), ...]]
+from shapely.geometry import LineString
 
-# Bad — pen lifts between every segment
-return [[(x1,y1),(x2,y2)], [(x2,y2),(x3,y3)], [(x3,y3),(x4,y4)], ...]
+# Good — one continuous stroke, pen never lifts
+vsk.geometry(LineString([(x1,y1), (x2,y2), (x3,y3), (x4,y4), ...]))
 ```
 
-Use multiple polylines only for genuinely separate strokes (e.g. the outline of a shape vs. an inner detail).
+Use separate draw calls only for genuinely separate strokes (e.g. the outline of a shape vs. an inner detail).

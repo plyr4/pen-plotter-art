@@ -1,11 +1,24 @@
-def generate_polylines(width, height):
-    """
-    width, height: page dimensions in mm (default A4: 210 x 297)
-    Returns a list of polylines, where each polyline is a list of (x, y) tuples in mm.
-    """
+import vsketch
+from shapely.geometry import LineString
 
-    # just two random two polylines
-    polyline_1 = [(0, 0), (width, height)]
-    polyline_2 = [(width, 0), (width, height)]
+MM_TO_PX = 96.0 / 25.4
 
-    return [polyline_1, polyline_2]
+
+class ExampleSketch(vsketch.SketchClass):
+    page_size = vsketch.Param("a4")
+    landscape = vsketch.Param(True)
+
+    def draw(self, vsk: vsketch.Vsketch) -> None:
+        vsk.size(self.page_size, landscape=self.landscape)
+        vsk.scale("1mm")
+        width = vsk.width / MM_TO_PX
+        height = vsk.height / MM_TO_PX
+        vsk.geometry(LineString([(0, 0), (width, height)]))
+        vsk.geometry(LineString([(width, 0), (width, height)]))
+
+    def finalize(self, vsk: vsketch.Vsketch) -> None:
+        vsk.vpype("linemerge linesort")
+
+
+if __name__ == "__main__":
+    ExampleSketch.display()
