@@ -52,7 +52,7 @@ You can also pass the sketch name directly:
 $ make new my_piece
 ```
 
-`new` use [cookiecutter](https://cookiecutter.readthedocs.io/en/stable/) with the local `sketch_template/`, which is based on the [vsketch cookiecutter template](https://github.com/abey79/cookiecutter-vsketch-sketch). It generates a new folder under `art/` with a ready-to-edit `generate.py`.
+`make new` uses [cookiecutter](https://cookiecutter.readthedocs.io/en/stable/) with the local `sketch_template/`, which is based on the [vsketch cookiecutter template](https://github.com/abey79/cookiecutter-vsketch-sketch). It generates a new folder under `art/` with a ready-to-edit `generate.py`.
 
 
 ### Editing a Sketch
