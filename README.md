@@ -1,6 +1,6 @@
 # pen-plotter-art
 
-A Python framework for generating pen plotter art. Write a generative art piece using the [vsketch](https://vsketch.readthedocs.io/en/latest/) API, and the framework converts it to SVG and HPGL output, then opens an interactive animation showing how the plotter will draw it.
+A Python framework for generating pen plotter art. Write a generative art sketch using the [vsketch](https://vsketch.readthedocs.io/en/latest/) API, and the framework converts it to SVG and HPGL output, then opens an interactive animation showing how the plotter will draw it.
 
 ## Setup
 
@@ -14,81 +14,122 @@ make install
 
 This creates a `venv/` and installs all dependencies from `requirements.txt`. You only need to do this once.
 
-## Generating Art
+## Running a Sketch
 
 ```sh
 make run
 ```
 
-Pick an art piece from the interactive menu. Or pass one directly:
+Pick a sketch from the interactive menu. Or pass one directly:
 
 ```sh
-make run ART=spiral
-make run ART=spiral CONFIG=my_config.json
+make run spiral
+make run spiral
 ```
 
-Each "art piece" uses `art/<name>/generate.py` to draw using the [vsketch](https://vsketch.readthedocs.io/en/latest/overview.html) API.
+Each sketch lives in `art/<name>/generate.py` and is a `vsketch.SketchClass` subclass.
 
-The framework passes the drawing to [vpype](https://vpype.readthedocs.io/en/latest/) to produce SVG and HPGL files, creating (or overwriting) two files:
-- `art/<name>/renders/<name>.svg` 
+The framework runs the sketch, passes the drawing through [vpype](https://vpype.readthedocs.io/en/latest/) to produce output files, then previews the HPGL as an animation:
+
+- `art/<name>/renders/<name>.svg`
 - `art/<name>/renders/<name>.hpgl`
 
-The program then _reads_ that HPGL file and "previews" what the pen plotter will do.
+After generating, it prints a stroke analysis table (strokes, segments, points, pen-down distance, pen-up travel) and opens the preview.
 
-## Creating an Art Piece
+## Creating a New Sketch
 
-Create a new folder under `art/` and add a `generate.py` file that exports a single function:
+```sh
+make new
+```
+
+This runs [cookiecutter](https://cookiecutter.readthedocs.io/en/stable/) with the local `sketch_template/`, which is based on the [vsketch cookiecutter template](https://github.com/abey79/cookiecutter-vsketch-sketch). It prompts for a name, page size, orientation, and preferred unit, then generates a new folder under `art/` with a ready-to-edit `generate.py`.
+
+You can also pass the sketch name directly:
+
+```sh
+make new my_piece
+```
+
+### Editing a Sketch
+
+Open `art/<name>/generate.py` and implement the `draw` method:
 
 ```python
-def generate(vsk, width, height):
-    """
-    vsk:    a vsketch.Vsketch instance — draw into it using the vsketch API.
-            Coordinates are in mm (scale("1mm") is pre-applied by the framework).
-    width, height: plottable area in mm (slightly smaller than the raw paper size).
-    """
-    vsk.line(0, 0, width, height)
+class MyPieceSketch(vsketch.SketchClass):
+    # Declare interactive parameters here
+    radius = vsketch.Param(2.0)
+
+    def draw(self, vsk: vsketch.Vsketch) -> None:
+        vsk.size("a4", landscape=True)
+        vsk.scale("1cm")
+
+        # draw using the vsketch API
+        vsk.circle(0, 0, self.radius, mode="radius")
+
+    def finalize(self, vsk: vsketch.Vsketch) -> None:
+        vsk.vpype(
+            "linemerge --tolerance 0.5mm linesimplify --tolerance 0.1mm linesort reloop --tolerance 0.05mm"
+        )
 ```
+
+The `finalize` method (pre-filled by the template) runs a vpype pipeline with sensible defaults for line merging, simplification, sorting, and relooping tolerances. Adjust tolerances as needed for your sketch.
 
 The full [vsketch API](https://vsketch.readthedocs.io/en/latest/overview.html) is available: `vsk.line()`, `vsk.rect()`, `vsk.circle()`, `vsk.polygon()`, `vsk.geometry()` (Shapely objects), transforms (`vsk.translate()`, `vsk.rotate()`, `vsk.pushMatrix()`), randomness (`vsk.random()`, `vsk.randomGaussian()`, `vsk.noise()`), and more.
 
-**Example** — a diagonal line across the page:
+### GUI Parameter Editing with vsk
 
-Create `art/my_piece` and `art/my_piece/generate.py`
+Each sketch is fully compatible with the `vsk` CLI. Run `vsk run art/<name>/generate.py` to open a live GUI where you can tweak `vsketch.Param` values interactively and see the result in real time. Save a configuration from there and place the resulting JSON in `art/<name>/config/` to use it with `make run`.
 
-```python
-def generate(vsk, width, height):
-    vsk.line(0, 0, width, height)
-```
+## Configs
 
-Then run the program:
+Config files are JSON files in `art/<name>/config/`. When you run a sketch, if configs exist you'll be prompted to pick one (or skip). You can also pass one directly:
 
 ```sh
-make run ART=my_piece
+make run spiral
 ```
 
-## Configuring the "Plotter"
+The framework applies the config values to the sketch's `Param` fields before drawing.
 
-Plotter settings are at the top of `main.py`:
+## Configuring the Plotter
 
-| Variable           | Default       | Description                                           |
-| ------------------ | ------------- | ----------------------------------------------------- |
-| `WIDTH` / `HEIGHT` | `210` / `297` | Page size in mm (A4 portrait)                         |
-| `HPGL_DEVICE`      | `"hp7475a"`   | [vpype device](https://vpype.readthedocs.io/en/latest/reference.html#write) name (controls plotter units and limits) |
-| `HPGL_PAGE_SIZE`   | `"a4"`        | Paper size passed to vpype                            |
-| `HPGL_LANDSCAPE`   | `True`        | Rotate output to landscape                            |
-| `HPGL_CENTER`      | `True`        | Center the drawing on the page                        |
-| `DRAW_SPEED`       | `40.0`        | Pen-down speed in mm/s (for preview timing)           |
-| `TRAVEL_SPEED`     | `200.0`       | Pen-up speed in mm/s (for preview timing)             |
+Global plotter settings are at the top of `main.py`:
+
+| Variable         | Default     | Description                                                                                             |
+| ---------------- | ----------- | ------------------------------------------------------------------------------------------------------- |
+| `HPGL_DEVICE`    | `"hp7475a"` | [vpype device](https://vpype.readthedocs.io/en/latest/reference.html#write) (controls units and limits) |
+| `HPGL_PAGE_SIZE` | `"a4"`      | Paper size passed to vpype                                                                              |
+| `HPGL_LANDSCAPE` | `True`      | Rotate output to landscape                                                                              |
+| `HPGL_CENTER`    | `True`      | Center the drawing on the page                                                                          |
+| `DRAW_SPEED`     | `40.0`      | Pen-down speed in mm/s (for preview timing)                                                             |
+| `TRAVEL_SPEED`   | `200.0`     | Pen-up speed in mm/s (for preview timing)                                                               |
+
+Page size and orientation are set per-sketch inside `draw()` via `vsk.size()`.
 
 Supported `HPGL_DEVICE` values include: `hp7475a`, `hp7550`, `hp7440a`, `designmate`, `artisan`, `dmp_161`, `dxy`, `sketchmate`.
+
+## Project Structure
+
+```
+art/              # one folder per sketch
+  <name>/
+    generate.py   # vsketch.SketchClass subclass — edit this
+    config/       # optional JSON param configs
+    renders/      # generated SVG and HPGL output
+random/           # scratch / experimental scripts (not part of the pipeline)
+models/           # shared 3D model data
+utils/            # shared utilities (mesh, noise, wiggle)
+hpgl_preview/     # HPGL parser and preview animation
+sketch_template/  # cookiecutter template for new sketches
+main.py           # CLI entry point
+```
 
 ## Resources
 
 - https://vsketch.readthedocs.io/en/latest/overview.html
-- https://paulbourke.net/dataformats/hpgl/
 - https://vpype.readthedocs.io/en/latest/
-- https://matplotlib.org/
-- [One Formula That Demystifies 3D Graphics](https://www.youtube.com/watch?v=qjWkNZ0SXfo)
+- https://paulbourke.net/dataformats/hpgl/
+- https://cookiecutter.readthedocs.io/en/stable/
+- https://github.com/abey79/cookiecutter-vsketch-sketch
 
 ## Tips
 
