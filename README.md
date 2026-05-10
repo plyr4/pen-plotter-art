@@ -43,6 +43,7 @@ After generating, it prints a stroke analysis table (strokes, segments, points, 
 
 ```bash
 $ make new
+? Name your new art piece: cool_piece
 ```
 
 You can also pass the sketch name directly:
