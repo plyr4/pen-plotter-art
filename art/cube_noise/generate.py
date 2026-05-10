@@ -1,28 +1,21 @@
 import os
-
-import numpy as np
+import sys
 import vsketch
-from PIL import Image
 from shapely.geometry import LineString
 
-from art.cube_shared import cube, wiggle_polyline
+# cross-compatibility with "vsk run" 
+# fmt: off
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+
+from utils.mesh import project_mesh
+from models.models import MODELS_PATH
+from utils.noise import load_noise, sample_noise
+from utils.wiggle import wiggle_polyline
+# fmt: on
 
 MM_TO_PX = 96.0 / 25.4
-
-
-def _load_noise():
-    path = os.path.join(os.path.dirname(__file__), "noise2.png")
-    img = Image.open(path).convert("L")
-    arr = np.array(img, dtype=np.float32) / 255.0  # shape (H, W), values in [0, 1]
-    return arr
-
-
-def _sample_noise(arr, x, y, width, height):
-    H, W = arr.shape
-    ix = int((x / width) * W) % W
-    iy = int((y / height) * H) % H
-    return arr[iy, ix] * 2.0 - 1.0
-
+STL_PATH = os.path.join(MODELS_PATH, "cube", "cube.stl")
+NOISE_PATH = os.path.join(os.path.dirname(__file__), "noise2.png")
 
 class CubeNoiseSketch(vsketch.SketchClass):
     page_size = vsketch.Param("a4")
@@ -34,13 +27,14 @@ class CubeNoiseSketch(vsketch.SketchClass):
         width = vsk.width / MM_TO_PX
         height = vsk.height / MM_TO_PX
 
-        noise = _load_noise()
+        noise = load_noise(NOISE_PATH)
         amplitude = 2.5
-        lines = cube(width, height)
+        lines = project_mesh(STL_PATH, width, height)
         for line in lines:
             wiggled = wiggle_polyline(
                 line,
-                lambda mx, my: _sample_noise(noise, mx, my, width, height) * amplitude,
+                lambda mx, my: sample_noise(
+                    noise, mx, my, width, height) * amplitude,
                 segments=400,
             )
             vsk.geometry(LineString(wiggled))

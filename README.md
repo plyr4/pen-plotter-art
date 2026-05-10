@@ -5,26 +5,27 @@ A Python framework for generating pen plotter art. Write a generative art piece 
 ## Setup
 
 1. Install [Python](https://www.python.org/downloads/macos/)
-1. Open [Terminal](https://support.apple.com/guide/terminal/open-or-quit-terminal-apd5265185d-f365-44cb-8b09-71a064a42125/mac)
+2. Open [Terminal](https://support.apple.com/guide/terminal/open-or-quit-terminal-apd5265185d-f365-44cb-8b09-71a064a42125/mac) in this folder
+3. Run:
 
 ```sh
-python3 -m venv venv
-source venv/bin/activate
-pip3 install matplotlib vpype vsketch
+make install
 ```
 
-> You should only need to do "Setup" once.
+This creates a `venv/` and installs all dependencies from `requirements.txt`. You only need to do this once.
 
 ## Generating Art
 
-Run this in [Terminal](https://support.apple.com/guide/terminal/open-or-quit-terminal-apd5265185d-f365-44cb-8b09-71a064a42125/mac) every time you want to generate or view art pieces.
-
 ```sh
-python main.py --art spiral
+make run
 ```
 
-The `--art` flag gives the program the name of a folder inside `art/`
-> each folder inside `art/` is an "art piece"
+Pick an art piece from the interactive menu. Or pass one directly:
+
+```sh
+make run ART=spiral
+make run ART=spiral CONFIG=my_config.json
+```
 
 Each "art piece" uses `art/<name>/generate.py` to draw using the [vsketch](https://vsketch.readthedocs.io/en/latest/overview.html) API.
 
@@ -62,7 +63,7 @@ def generate(vsk, width, height):
 Then run the program:
 
 ```sh
-python main.py --art my_piece
+make run ART=my_piece
 ```
 
 ## Configuring the "Plotter"

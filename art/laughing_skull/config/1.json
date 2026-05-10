@@ -1,0 +1,22 @@
+{
+    "page_size": "a4",
+    "landscape": true,
+    "num_skulls": 125,
+    "turns": 6.0,
+    "inner_radius": 0.1,
+    "outer_radius": 125.0,
+    "scale_inner": 0.05,
+    "scale_outer": 85.0,
+    "rot_x": 25.0,
+    "rot_z_base": 70.0,
+    "spin_with_angle": true,
+    "position_noise": 1.2,
+    "noise_seed": 44,
+    "blackhole_radius": 15.0,
+    "blackhole_points": 10,
+    "blackhole_noise": 1.0,
+    "skull_1_stl": "laughing_skull/skull_1.stl",
+    "skull_2_stl": "laughing_skull/skull_2.stl",
+    "skull_3_stl": "laughing_skull/skull_3.stl",
+    "__seed__": 0
+}

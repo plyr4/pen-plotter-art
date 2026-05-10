@@ -1,0 +1,11 @@
+click
+matplotlib
+numpy
+pillow
+questionary
+rich
+shapely
+vpype @ git+https://github.com/abey79/vpype.git@046cd418da75fba1fef7f40aeeca3287ff277658
+vpype-occult
+vpype-pixelart
+vsketch

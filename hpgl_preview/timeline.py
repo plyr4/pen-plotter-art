@@ -1,15 +1,18 @@
 import math
 import bisect
+import traceback
 import matplotlib.pyplot as plt
 import matplotlib.widgets as widgets
 from hpgl_preview.hpgl_parser.parse import parse_hpgl
 
 
 def show_timeline(draw_speed, travel_speed, art,
-                     plotter_unit_mm=0.02488, playback_speed=60):
+                     plotter_unit_mm=0.02488, playback_speed=60, on_refresh=None):
     hpgl_lines, max_x, max_y = parse_hpgl(f"art/{art}/renders/{art}.hpgl")
 
     paths = [lines for (_pen, _width, lines) in hpgl_lines if len(lines) > 1]
+    all_moves = []
+    times = []
 
     fig, ax = plt.subplots()
     fig.canvas.manager.set_window_title(f'Plotting {art}')
@@ -36,7 +39,6 @@ def show_timeline(draw_speed, travel_speed, art,
         bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.7),
     )
 
-    all_moves = []
     for path in paths:
         if not path:
             continue
@@ -47,7 +49,7 @@ def show_timeline(draw_speed, travel_speed, art,
             all_moves.append((pt[0], pt[1], True))
 
     # build cumulative time array
-    times = [0.0]
+    times.append(0.0)
     for i in range(1, len(all_moves)):
         x1, y1, _ = all_moves[i - 1]
         x2, y2, pen_down = all_moves[i]
@@ -117,6 +119,47 @@ def show_timeline(draw_speed, travel_speed, art,
     # play/pause button
     ax_btn = fig.add_axes([0.45, 0.01, 0.1, 0.04])
     btn = widgets.Button(ax_btn, 'Play')
+
+    # optional refresh button
+    if on_refresh is not None:
+        ax_refresh = fig.add_axes([0.57, 0.01, 0.12, 0.04])
+        btn_refresh = widgets.Button(ax_refresh, '\u21ba Refresh')
+
+        def on_refresh_clicked(_):
+            try:
+                on_refresh()
+            except Exception:
+                traceback.print_exc()
+                print("[Refresh] Error during sketch regeneration — see above.")
+                return
+            nonlocal paths, all_moves, times, total_time
+            new_lines, _, _ = parse_hpgl(f"art/{art}/renders/{art}.hpgl")
+            paths = [lines for (_pen, _width, lines) in new_lines if len(lines) > 1]
+            all_moves.clear()
+            for path in paths:
+                if not path:
+                    continue
+                all_moves.append((path[0][0], path[0][1], False))
+                for pt in path:
+                    all_moves.append((pt[0], pt[1], True))
+            times.clear()
+            times.append(0.0)
+            for i in range(1, len(all_moves)):
+                x1, y1, _ = all_moves[i - 1]
+                x2, y2, pen_down = all_moves[i]
+                dist_mm = math.hypot(x2 - x1, y2 - y1) * plotter_unit_mm
+                speed = draw_speed if pen_down else travel_speed
+                times.append(times[-1] + dist_mm / speed)
+            total_time = times[-1]
+            slider.valmax = total_time
+            slider.ax.set_xlim(0, total_time)
+            playback_t[0] = 0.0
+            slider.set_val(0.0)
+            render(0.0)
+            playing[0] = False
+            on_btn(None)  # autoplay after refresh
+
+        btn_refresh.on_clicked(on_refresh_clicked)
 
     playing = [False]
     last_wall = [None]
