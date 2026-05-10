@@ -23,8 +23,14 @@ make run
 Pick a sketch from the interactive menu. Or pass one directly:
 
 ```sh
+make run
+? Select an art piece: (Use arrow keys)
+ » cube
+
 make run spiral
-make run spiral
+─────── spiral ───────
+  art/spiral/renders/spiral.svg
+
 ```
 
 Each sketch lives in `art/<name>/generate.py` and is a `vsketch.SketchClass` subclass.
@@ -76,10 +82,6 @@ The `finalize` method (pre-filled by the template) runs a vpype pipeline with se
 
 The full [vsketch API](https://vsketch.readthedocs.io/en/latest/overview.html) is available: `vsk.line()`, `vsk.rect()`, `vsk.circle()`, `vsk.polygon()`, `vsk.geometry()` (Shapely objects), transforms (`vsk.translate()`, `vsk.rotate()`, `vsk.pushMatrix()`), randomness (`vsk.random()`, `vsk.randomGaussian()`, `vsk.noise()`), and more.
 
-### GUI Parameter Editing with vsk
-
-Each sketch is fully compatible with the `vsk` CLI. Run `vsk run art/<name>/generate.py` to open a live GUI where you can tweak `vsketch.Param` values interactively and see the result in real time. Save a configuration from there and place the resulting JSON in `art/<name>/config/` to use it with `make run`.
-
 ## Configs
 
 Config files are JSON files in `art/<name>/config/`. When you run a sketch, if configs exist you'll be prompted to pick one (or skip). You can also pass one directly:
@@ -89,6 +91,10 @@ make run spiral
 ```
 
 The framework applies the config values to the sketch's `Param` fields before drawing.
+
+### GUI Parameter Editing with vsk
+
+Each sketch is fully compatible with the `vsk` CLI. Run `vsk run art/<name>/generate.py` to open a live GUI where you can tweak `vsketch.Param` values interactively and see the result in real time. Save a configuration from there and place the resulting JSON in `art/<name>/config/` to use it with `make run`.
 
 ## Configuring the Plotter
 
