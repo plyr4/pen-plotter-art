@@ -10,6 +10,7 @@ import vpype
 import vsketch
 from hpgl_preview.timeline import show_timeline
 from rich.console import Console
+from rich.rule import Rule
 from rich.table import Table
 from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 
@@ -74,26 +75,23 @@ def print_doc_info(doc, art):
     console.print()
 
 
+def _file_size_str(path):
+    if not os.path.exists(path):
+        return "[red]missing[/red]"
+    size = os.path.getsize(path)
+    if size >= 1_048_576:
+        return f"{size / 1_048_576:.1f} MB"
+    if size >= 1024:
+        return f"{size / 1024:.1f} KB"
+    return f"{size} B"
+
+
 def print_file_info(svg_path, hpgl_path):
     console = Console()
-    files = [("SVG", svg_path), ("HPGL", hpgl_path)]
-    table = Table(title="Output files", show_header=True)
-    table.add_column("Type", style="cyan", width=6)
-    table.add_column("Path", style="dim")
-    table.add_column("Size", justify="right")
-    for ftype, fpath in files:
-        if os.path.exists(fpath):
-            size = os.path.getsize(fpath)
-            if size >= 1_048_576:
-                size_str = f"{size / 1_048_576:.1f} MB"
-            elif size >= 1024:
-                size_str = f"{size / 1024:.1f} KB"
-            else:
-                size_str = f"{size} B"
-        else:
-            size_str = "[red]missing[/red]"
-        table.add_row(ftype, fpath, size_str)
-    console.print(table)
+    console.print(
+        f"  [cyan]SVG [/cyan]  [dim]{svg_path}[/dim]  {_file_size_str(svg_path)}")
+    console.print(
+        f"  [cyan]HPGL[/cyan]  [dim]{hpgl_path}[/dim]  {_file_size_str(hpgl_path)}")
     console.print()
 
 
@@ -135,7 +133,8 @@ def generate_and_write(sketch_cls, svg_out, hpgl_out, art):
         sketch = sketch_cls.execute(finalize=True)
         doc = sketch.vsk.document
         draw_svg(doc, svg_out)
-        progress.update(task, description=f"Writing {os.path.basename(hpgl_out)}...")
+        progress.update(
+            task, description=f"Writing {os.path.basename(hpgl_out)}...")
         plot_hpgl(doc, hpgl_out, HPGL_PAGE_SIZE, HPGL_LANDSCAPE,
                   HPGL_CENTER, HPGL_DEVICE, HPGL_VELOCITY)
         progress.update(task, description=f"Done — {art}")
@@ -210,28 +209,33 @@ def run(art, config_name):
         apply_config(sketch_cls, config_path)
 
     config_suffix = ""
+    config_stem = None
     if config_path is not None:
         config_stem = os.path.splitext(os.path.basename(config_path))[0]
         config_suffix = f"_{config_stem}"
 
-    svg_default = os.path.join("art", art, "renders", f"{art}{config_suffix}.svg")
-    hpgl_default = os.path.join("art", art, "renders", f"{art}{config_suffix}.hpgl")
+    svg_out = os.path.join("art", art, "renders", f"{art}{config_suffix}.svg")
+    hpgl_out = os.path.join("art", art, "renders",
+                            f"{art}{config_suffix}.hpgl")
 
-    answer = questionary.text("Output SVG path:", default=svg_default).ask()
-    if answer is None:
-        raise SystemExit(0)
-    svg_out = answer.strip()
-    hpgl_out = os.path.splitext(svg_out)[0] + ".hpgl"
+    console = Console()
+    title = f"[bold]{art}[/bold]"
+    if config_stem:
+        title += f"  [dim]config: {config_stem}[/dim]"
+    console.print()
+    console.print(Rule(title, style="cyan"))
+    console.print(f"  [dim]{svg_out}[/dim]")
+    console.print()
 
     skip_generation = False
     if os.path.exists(svg_out):
-        action = questionary.select(
-            f"'{os.path.basename(svg_out)}' already exists. What would you like to do?",
-            choices=["Use existing", "Generate new (overwrite)"],
+        regenerate = questionary.confirm(
+            f"'{os.path.basename(svg_out)}' already exists — regenerate?",
+            default=False,
         ).ask()
-        if action is None:
+        if regenerate is None:
             raise SystemExit(0)
-        skip_generation = action == "Use existing"
+        skip_generation = not regenerate
 
     vpype_doc = None
     if not skip_generation:
