@@ -1,41 +1,38 @@
 # pen-plotter-art
 
-A Python framework for generating pen plotter art. Write a generative art sketch using the [vsketch](https://vsketch.readthedocs.io/en/latest/) API, and the framework converts it to SVG and HPGL output, then opens an interactive animation showing how the plotter will draw it.
+A small program for generating pen plotter art.
+
+Write a generative art sketch using Python, render it to [SVG](https://developer.mozilla.org/en-US/docs/Web/SVG) and [HPGL](https://en.wikipedia.org/wiki/HP-GL), then preview the HPGL with an interactive animation showing how the plotter will draw it.
 
 ## Setup
 
-1. Install [Python](https://www.python.org/downloads/macos/)
-2. Open [Terminal](https://support.apple.com/guide/terminal/open-or-quit-terminal-apd5265185d-f365-44cb-8b09-71a064a42125/mac) in this folder
-3. Run:
+* [Python 3.13.1](https://www.python.org/downloads/macos/)
+* [pip](https://pip.pypa.io/en/stable/installation/)
+* [Make](https://www.gnu.org/software/make/)
 
 ```sh
-make install
+$ make install
 ```
 
 This creates a `venv/` and installs all dependencies from `requirements.txt`. You only need to do this once.
 
-## Running a Sketch
+## Viewing a Sketch
 
 ```sh
-make run
-```
-
-Pick a sketch from the interactive menu. Or pass one directly:
-
-```sh
-make run
+$ make run
 ? Select an art piece: (Use arrow keys)
  » cube
-
-make run spiral
-─────── spiral ───────
-  art/spiral/renders/spiral.svg
-
 ```
 
-Each sketch lives in `art/<name>/generate.py` and is a `vsketch.SketchClass` subclass.
+Pick an art piece from `art/`. Or pass one directly:
 
-The framework runs the sketch, passes the drawing through [vpype](https://vpype.readthedocs.io/en/latest/) to produce output files, then previews the HPGL as an animation:
+```sh
+$ make run spiral
+```
+
+Each art piece lives in `art/<name>/generate.py` and is a `vsketch.SketchClass` subclass.
+
+The program runs the sketch, passes the drawing through [vpype](https://vpype.readthedocs.io/en/latest/) to produce output files, then previews the HPGL as an animation:
 
 - `art/<name>/renders/<name>.svg`
 - `art/<name>/renders/<name>.hpgl`
@@ -45,13 +42,13 @@ After generating, it prints a stroke analysis table (strokes, segments, points, 
 ## Creating a New Sketch
 
 ```sh
-make new
+$ make new
 ```
 
 You can also pass the sketch name directly:
 
 ```sh
-make new my_piece
+$ make new my_piece
 ```
 
 `new` use [cookiecutter](https://cookiecutter.readthedocs.io/en/stable/) with the local `sketch_template/`, which is based on the [vsketch cookiecutter template](https://github.com/abey79/cookiecutter-vsketch-sketch). It generates a new folder under `art/` with a ready-to-edit `generate.py`.
@@ -63,7 +60,7 @@ Open `art/<name>/generate.py` and implement the `draw` method:
 
 ```python
 class MyPieceSketch(vsketch.SketchClass):
-    # Declare interactive parameters here
+    # declare interactive parameters here
     radius = vsketch.Param(2.0)
 
     def draw(self, vsk: vsketch.Vsketch) -> None:
@@ -88,7 +85,7 @@ The full [vsketch API](https://vsketch.readthedocs.io/en/latest/overview.html) i
 Config files are JSON files in `art/<name>/config/`. When you run a sketch, if configs exist you'll be prompted to pick one (or skip). You can also pass one directly:
 
 ```sh
-make run spiral
+$ make run spiral
 ```
 
 The framework applies the config values to the sketch's `Param` fields before drawing.
