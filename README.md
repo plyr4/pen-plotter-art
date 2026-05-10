@@ -10,7 +10,7 @@ Write a generative art sketch using Python, render it to [SVG](https://developer
 * [pip](https://pip.pypa.io/en/stable/installation/)
 * [Make](https://www.gnu.org/software/make/)
 
-```sh
+```bash
 $ make install
 ```
 
@@ -18,7 +18,7 @@ This creates a `venv/` and installs all dependencies from `requirements.txt`. Yo
 
 ## Viewing a Sketch
 
-```sh
+```bash
 $ make run
 ? Select an art piece: (Use arrow keys)
  » cube
@@ -26,7 +26,7 @@ $ make run
 
 Pick an art piece from `art/`. Or pass one directly:
 
-```sh
+```bash
 $ make run spiral
 ```
 
@@ -41,13 +41,13 @@ After generating, it prints a stroke analysis table (strokes, segments, points, 
 
 ## Creating a New Sketch
 
-```sh
+```bash
 $ make new
 ```
 
 You can also pass the sketch name directly:
 
-```sh
+```bash
 $ make new my_piece
 ```
 
@@ -84,7 +84,7 @@ The full [vsketch API](https://vsketch.readthedocs.io/en/latest/overview.html) i
 
 Config files are JSON files in `art/<name>/config/`. When you run a sketch, if configs exist you'll be prompted to pick one (or skip). You can also pass one directly:
 
-```sh
+```bash
 $ make run spiral
 ```
 
