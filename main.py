@@ -225,6 +225,7 @@ def run(art, config_name):
     console.print()
     console.print(Rule(title, style="cyan"))
     console.print(f"  [dim]{svg_out}[/dim]")
+    console.print(f"  [dim]{hpgl_out}[/dim]")
     console.print()
 
     skip_generation = False
@@ -265,7 +266,7 @@ def run(art, config_name):
         generate_and_write(cls, svg_out, hpgl_out, art)
 
     if questionary.confirm(f"View timeline for {os.path.basename(hpgl_out)}?", default=False).ask():
-        show_timeline(DRAW_SPEED, TRAVEL_SPEED, art, on_refresh=refresh)
+        show_timeline(DRAW_SPEED, TRAVEL_SPEED, art, hpgl_out, on_refresh=refresh)
 
 
 @cli.command()

@@ -6,9 +6,10 @@ import matplotlib.widgets as widgets
 from hpgl_preview.hpgl_parser.parse import parse_hpgl
 
 
-def show_timeline(draw_speed, travel_speed, art,
+def show_timeline(draw_speed, travel_speed, art, art_path,
                      plotter_unit_mm=0.02488, playback_speed=60, on_refresh=None):
-    hpgl_lines, max_x, max_y = parse_hpgl(f"art/{art}/renders/{art}.hpgl")
+
+    hpgl_lines, max_x, max_y = parse_hpgl(art_path)
 
     paths = [lines for (_pen, _width, lines) in hpgl_lines if len(lines) > 1]
     all_moves = []
@@ -133,7 +134,7 @@ def show_timeline(draw_speed, travel_speed, art,
                 print("[Refresh] Error during sketch regeneration — see above.")
                 return
             nonlocal paths, all_moves, times, total_time
-            new_lines, _, _ = parse_hpgl(f"art/{art}/renders/{art}.hpgl")
+            new_lines, _, _ = parse_hpgl(art_path)
             paths = [lines for (_pen, _width, lines) in new_lines if len(lines) > 1]
             all_moves.clear()
             for path in paths:

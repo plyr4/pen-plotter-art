@@ -113,7 +113,7 @@ Page size and orientation are set per-sketch inside `draw()` via `vsk.size()`.
 Supported `HPGL_DEVICE` values include: `hp7475a`, `hp7550`, `hp7440a`, `designmate`, `artisan`, `dmp_161`, `dxy`, `sketchmate`.
 
 ## Project Structure
-
+    
 ```
 art/              # one folder per sketch
   <name>/
